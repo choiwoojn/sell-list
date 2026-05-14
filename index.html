@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sell List</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Roboto', sans-serif;
+    letter-spacing: -0.015em; 
+    color: #000;
+    margin: 0;
+    padding: 30px 7.5vw; 
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .page-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 40px;
+  }
+  
+  .page-title a {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .number {
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: -0.03em;
+  }
+
+  .price {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 1px;
+  }
+
+  /* 장르 메뉴 영역 간격 조절 */
+  .nav-genres {
+    text-align: center;
+    margin-bottom: 45px; /* 글씨가 작아진 만큼 하단 여백도 살짝 줄임 */
+  }
+
+  .nav-genres a {
+    font-weight: 400; 
+    font-size: 1.1rem; /* 1.25rem에서 글씨 크기 축소 */
+    margin: 0 12px; /* 여백도 자연스럽게 살짝 줄임 */
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.4s ease, text-decoration-color 0.4s ease;
+  }
+
+  .nav-genres a:hover {
+    color: blue;
+  }
+
+  .nav-genres a.active-genre {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 1px;
+  }
+
+  .interactive {
+    cursor: pointer;
+    text-decoration: none; 
+    color: inherit;
+    transition: color 0.4s ease;
+  }
+
+  .interactive:hover {
+    color: blue;
+  }
+
+  /* a 태그뿐만 아니라 span 태그에도 밑줄이 적용되도록 변경 */
+  .listen-link {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+    text-decoration-thickness: 1px;
+  }
+
+  .list-container {
+    width: 100%;
+    max-width: 1600px; 
+    margin: 0 auto;
+    display: none; 
+  }
+
+  .list-header, .list-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 2.5fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 3.8fr); 
+    column-gap: 80px; 
+    margin-bottom: 20px;
+    align-items: start;
+    position: relative;
+  }
+
+  .list-header {
+    padding-bottom: 4px;
+    border-bottom: 1px solid #000; 
+    margin-bottom: 15px;
+  }
+
+  /* 판매 완료 스타일 */
+  .list-row.sold-out {
+    opacity: 0.4;
+    pointer-events: none; /* 클릭 및 호버 방지 */
+  }
+
+  .list-row.sold-out::after {
+    content: '';
+    position: absolute;
+    top: 12px; 
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #000;
+  }
+
+  .track-details {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin-top: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: nowrap; 
+    transition: max-height 0.5s ease, opacity 0.5s ease, margin-top 0.5s ease;
+  }
+
+  .track-details.active {
+    max-height: 1000px; 
+    opacity: 1;
+    margin-top: 10px;
+  }
+
+  /* 반응형 미디어 쿼리 */
+  @media (max-width: 1400px) {
+    body { padding: 30px 5vw; }
+    .list-header, .list-row { column-gap: 50px; }
+  }
+
+  @media (max-width: 1024px) {
+    body { padding: 30px 4vw; }
+    .list-header, .list-row {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 3.8fr); 
+      column-gap: 30px; 
+    }
+  }
+
+  @media (max-width: 768px) {
+    body { padding: 20px 6vw; }
+    .page-title { margin-bottom: 30px; font-size: 1.3rem; }
+    .nav-genres { margin-bottom: 35px; }
+    .nav-genres a { font-size: 1rem; margin: 0 8px; }
+    
+    .list-header { display: none; }
+    
+    .list-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-bottom: 25px;
+      border-bottom: 1px solid #ccc; 
+    }
+
+    .list-row.sold-out::after { display: none; }
+    .list-row.sold-out { 
+      text-decoration: line-through; 
+      text-decoration-thickness: 1px; 
+    }
+    
+    .track-details { white-space: normal; } 
+  }
+</style>
+</head>
+<body>
+
+  <h1 class="page-title"><a href="#" id="home-btn">Sell List</a></h1>
+
+  <div class="nav-genres">
+    <a href="#hiphop" class="genre-btn">Hip Hop</a>
+    <a href="#soul-funk" class="genre-btn">Soul / Funk</a>
+    <a href="#reggae" class="genre-btn">Reggae</a>
+    <a href="#electronic" class="genre-btn">Electronic</a>
+  </div>
+
+  <div class="list-container" id="archive-list">
+    <div class="list-header">
+      <div>Artist</div>
+      <div>Album</div>
+      <div>Label</div>
+      <div>Price</div>
+      <div>Track</div>
+      <div></div>
+    </div>
+
+    <!-- ==============================================
+         HIP HOP LIST (A-Z)
+    =============================================== -->
+    <div class="list-row" data-genre="hiphop">
+      <div>A+</div>
+      <div>Enjoy Yourself</div>
+      <div>Universal Records</div>
+      <div class="number price">10,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=VrjI20IHVDo" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Enjoy Yourself (Album Version)<br>
+          A2: Enjoy Yourself (Instrumental)<br>
+          B1: Up Top New York (Album Version)<br>
+          B2: Up Top New York (Radio Edit)
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>AZ</div>
+      <div>Doe Or Die</div>
+      <div>Emi Records</div>
+      <div class="number price">10,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=1VI2HHeXNIQ" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Doe Or Die (Radio Version)<br>
+          A2: Doe Or Die (Album Version)<br>
+          A3: Doe Or Die (Acapella)<br>
+          A4: Mo Money, Mo Murder "Homicide" (Radio Version)<br>
+          B1: Doe Or Die (Remix)<br>
+          B2: Doe Or Die (Remix Instrumental)<br>
+          B3: Mo Money, Mo Murder "Homicide" (Album Version)<br>
+          B4: Doe Or Die (Album Instrumental)
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>De La Soul</div>
+      <div>4 More</div>
+      <div>Tommy Boy</div>
+      <div class="number price">15,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=PB1cJkgsmj4" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: 4 More (Clean Version)<br>
+          A2: Supa Emcees (Clean Version)<br>
+          A3: Sweet Dreams (Clean Version)<br>
+          A4: Itzoweeze (Hot) (De La Soul Remix)
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>Dream Warriors</div>
+      <div>California Dreamin’</div>
+      <div>Pendulum Records</div>
+      <div class="number price">12,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=p5FfnV5YM-c" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: California Dreamin' (Radio Mix)<br>
+          A2: California Dreamin' (Caught Ya Dreamin' Mix)<br>
+          A3: California Dreamin' (Radio Instrumental)<br>
+          B1: California Dreamin' (Da Dreamers Mix)<br>
+          B2: California Dreamin' (Album Version)<br>
+          B3: California Dreamin' (Power Mix)
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>Jay-Z</div>
+      <div>Excuse Me Miss / The Bounce</div>
+      <div>Roc-A-Fella-Records</div>
+      <div class="number price">10,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=c5lF73ilJkA" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Excuse Me Miss (Radio)<br>
+          A2: Excuse Me Miss (LP Version)<br>
+          A3: Excuse Me Miss (Instrumental)<br>
+          B1: The Bounce (Radio)<br>
+          B2: The Bounce (LP Version)<br>
+          B3: The Bounce (Instrumental)
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>Jeru The Damaja</div>
+      <div>East New York Stalks / Friend or Foe</div>
+      <div>White</div>
+      <div class="number price">10,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=aDpdzxEcsp8" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: East New York Stalks<br>
+          A2: Friend Or Foe
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>Kurtis Blow</div>
+      <div>Deuce</div>
+      <div>Mercury</div>
+      <div class="number price">12,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=WPW4WudOR9k" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: The Deuce<br>
+          A2: It's Getting Hot<br>
+          A3: Getaway<br>
+          B1: Starlife<br>
+          B2: Take It To The Bridge<br>
+          B3: Do The Do<br>
+          B4: Rockin'
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>L.L. Cool J</div>
+      <div>Bigger And Deffer (BAD)</div>
+      <div>Def Jam Recordings</div>
+      <div class="number price">40,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=Ey3fRSBoO30" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: I’m Bad<br>
+          A2: Kanday<br>
+          A3: Get Down<br>
+          A4: The Bristol Hotel<br>
+          A5: My Rhyme Ain't Done<br>
+          A6: .357 Break It On Down<br>
+          B1: Go Cut Creator Go<br>
+          B2: The Breakthrough<br>
+          B3: I Need Love<br>
+          B4: Ahh, Let's Get Ill<br>
+          B5: The Do Wop<br>
+          B6: On The Ill Tip
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>L.L. Cool J</div>
+      <div>Luv U Better</div>
+      <div>Def Jam Recordings</div>
+      <div class="number price">13,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=z1GCe8YNcic" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Luv U Better (Radio Edit)<br>
+          A2: Luv U Better (LP Version)<br>
+          A3: Luv U Better (Instrumental)<br>
+          B1: Fa Ha (Radio Edit)<br>
+          B2: Fa Ha (LP Version)<br>
+          B3: Fa Ha (Instrumental)
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>L.L. Cool J</div>
+      <div>Mama Said Knock You Out</div>
+      <div>Def Jam Recordings</div>
+      <div class="number price">15,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=vimZj8HW0Kg" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Mama Said Knock You Out (Original Recipe (Long))<br>
+          A2: Mama Said Knock You Out (Original Recipe (Short))<br>
+          A3: Mama Said Knock You Out (For Steering Pleasure)<br>
+          A4: Mama Said Knock You Out (Bonus Beats)<br>
+          B1: Mama Said Knock You Out (Hot Mix (Short))<br>
+          B2: Mama Said Knock You Out (Hot Mix (Long))<br>
+          B3: Mama Said Knock You Out (7 A.M. Mix)
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>Pete Rock & CL Smooth</div>
+      <div>Mecca And The Soul Brother</div>
+      <div>Elektra</div>
+      <div class="number price">40,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=qs0ou8b9GS8" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Return Of The Mecca<br>
+          A2: For Pete's Sake<br>
+          A3: Ghettos Of The Mind<br>
+          A4: Lots Of Lovin<br>
+          A5: Act Like You Know<br>
+          B1: Straighten It Out<br>
+          B2: Soul Brother #1<br>
+          B3: Wig Out<br>
+          B4: Anger In The Nation<br>
+          B5: They Reminisce Over You (T.R.O.Y.)<br>
+          C1: On And On<br>
+          C2: It's Like That<br>
+          C3: Can't Front On Me<br>
+          C4: The Creator (Remix)<br>
+          D1: Mecca And The Soul Brother (Remix)<br>
+          D2: The Basement<br>
+          D3: If It Ain't Rough, It Ain't Right<br>
+          D4: Skinz
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="hiphop">
+      <div>Sporty Thievz</div>
+      <div>Street Cinema</div>
+      <div>Ruffhouse Records</div>
+      <div class="number price">25,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=zI9jet1rx0k" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Intro<br>
+          A2: The Spot<br>
+          A3: Fedz / Freeks Skit<br>
+          A4: Freeks / Slow Money Toney<br>
+          B1: Spy Hunter<br>
+          B2: Like Father, Like Son / C.E.O Freestyle<br>
+          B3: Raw Footage<br>
+          C1: Hit Men / Cheapskit<br>
+          C2: Cheapskate<br>
+          C3: Angel<br>
+          C4: Mac Daddy / Aquaskit<br>
+          D1: Aquamen<br>
+          D2: Ready<br>
+          D3: Propose A Toast<br>
+          D4: Street Cinema
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         SOUL / FUNK LIST (A-Z)
+    =============================================== -->
+    <div class="list-row" data-genre="soul-funk">
+      <div>Angela Bofill</div>
+      <div>Tonight I Give In / Song For A Rainy Day (7inch)</div>
+      <div>Arista</div>
+      <div class="number price">5,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=jzAcdIAPbUE" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A: Tonight I Give In<br>
+          B: Song For A Rainy Day
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Barry White</div>
+      <div>I’ve Got So Much To Give</div>
+      <div>20th Century Records</div>
+      <div class="number price">25,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=DYuf4bxqIjY" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Standing In The Shadows Of Love<br>
+          A2: Bring Back My Yesterday<br>
+          B1: I've Found Someone<br>
+          B2: I've Got So Much To Give<br>
+          B3: I'm Gonna Love You Just A Little More Baby
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Bobby Caldwell</div>
+      <div>What You Won't Do For Love (7inch)</div>
+      <div>Clouds</div>
+      <div class="number price">30,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=n9DmdAwUbxc" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A: What You Won't Do For Love<br>
+          B: Love Won't Wait
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Deniece Williams</div>
+      <div>I’m So Proud</div>
+      <div>Columbia</div>
+      <div class="number price">19,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=toAT3TmN6oI" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Do What You Feel<br>
+          A2: I'm So Proud<br>
+          A3: So Deep In Love<br>
+          A4: I'm Glad It's You<br>
+          B1: Heaven In Your Eyes<br>
+          B2: They Say<br>
+          B3: Love, Peace And Unity<br>
+          B4: It's Okay
+        </div>
+      </div>
+    </div>
+
+    <!-- 텍스트를 남겨둔 Earth, Wind & Fire (판매 완료 처리) -->
+    <div class="list-row sold-out" data-genre="soul-funk">
+      <div>Earth, Wind & Fire</div>
+      <div>Powerlight</div>
+      <div>CBS</div>
+      <div class="number price">40,000</div> 
+      <div><span class="listen-link">Listen Here!</span></div>
+      <div><span>[Track List]</span></div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Marvin Sease</div>
+      <div>Marvin Sease</div>
+      <div>London Records</div>
+      <div class="number price">18,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=TFf-QZI8rFQ" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Double Crosser<br>
+          A2: Let's Get Married Today<br>
+          A3: Love Me Or Leave Me<br>
+          A4: Ghetto Man<br>
+          B1: You're Number One<br>
+          B2: Dreaming<br>
+          B3: Candy Licker
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Mike Francis</div>
+      <div>Love Has Found You / Nightime Lady</div>
+      <div>Best Record</div>
+      <div class="number price">25,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=jO83AJ3y-CE" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Love Has Found You<br>
+          B1: Nightime Lady
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Patti LaBelle</div>
+      <div>All This Love</div>
+      <div>MCA Records</div>
+      <div class="number price">18,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=9REX-WGVWuw" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: All This Love (Hip Hop Mix)<br>
+          A2: All This Love (Patti's Buttah Mix)<br>
+          B1: Our World
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Ray Parker Jr. And Raydio</div>
+      <div>A Woman Needs Love</div>
+      <div>Arista</div>
+      <div class="number price">25,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=ckAHnZqbQeg" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: A Woman Needs Love (Just Like You Do)<br>
+          A2: It's Your Night<br>
+          A3: That Old Song<br>
+          A4: All In The Way You Get Down<br>
+          B1: You Can't Fight What You Feel<br>
+          B2: Old Pro<br>
+          B3: Still In The Groove<br>
+          B4: So Into You
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Ray, Goodman & Brown</div>
+      <div>Open Up</div>
+      <div>Polydor</div>
+      <div class="number price">28,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=h1zIEDSTtXM" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: If We Open Up<br>
+          A2: Love Minus One<br>
+          A3: Gambled On Your Love<br>
+          A4: Saying Goodbye Is Easy<br>
+          A5: It Was Always You<br>
+          B1: Taking Chances<br>
+          B2: After All<br>
+          B3: You Turned My World Around<br>
+          B4: Take Me To The Top Of Your Mountain
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Ready For The World</div>
+      <div>Ready For The World</div>
+      <div>MCA Records</div>
+      <div class="number price">18,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=0O_A74tGojw" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Tonight<br>
+          A2: Digital Display<br>
+          A3: Ceramic Girl<br>
+          A4: Deep Inside Your Love<br>
+          B1: Oh Sheila<br>
+          B2: Human Toy<br>
+          B3: Slide Over<br>
+          B4: Out Of Town Lover<br>
+          B5: I'm The One Who Loves You
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Sade</div>
+      <div>The Sweetest Taboo (7inch)</div>
+      <div>Portrait</div>
+      <div class="number price">18,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=7s9VY9kqgfE" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A: The Sweetest Taboo<br>
+          B: You're Not The Man
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Shakatak</div>
+      <div>Night Birds (SUMIN’S PICK!)</div>
+      <div>Polydor</div>
+      <div class="number price">30,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=kuJwZ7W87zo&t=2050s" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Night Birds<br>
+          A2: Streetwalkin'<br>
+          A3: Rio Nights<br>
+          A4: Fly The Wind<br>
+          B1: Easier Said Than Done<br>
+          B2: Bitch To The Boys<br>
+          B3: Light On My Life<br>
+          B4: Takin' Off
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Shakatak</div>
+      <div>Out Of This World</div>
+      <div>Polydor</div>
+      <div class="number price">21,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=wzTElDr46UY" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Dark Is The Night<br>
+          A2: Don't Say That Again<br>
+          A3: Slip Away<br>
+          A4: On Nights Like Tonight<br>
+          B1: Out Of This World<br>
+          B2: Let's Get Together<br>
+          B3: If You Could See Me Now<br>
+          B4: Sanur
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Syreeta & G.C. Cameron</div>
+      <div>Rich Love, Poor Love</div>
+      <div>Motown</div>
+      <div class="number price">13,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=bGGu0HnnBqk" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Rich Love, Poor Love Theme/You Need A Change<br>
+          A2: I'll Try Love Again<br>
+          A3: Let's Make A Deal<br>
+          A4: Station Break For Love<br>
+          B1: Made From Love<br>
+          B2: Love To The Rescue<br>
+          B3: All Things Happen For A Reason<br>
+          B4: Rich Love, Poor Love.....To Be Continued.....
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Tracie Spencer</div>
+      <div>It’s All About You (Not About Me)</div>
+      <div>Capitol Records</div>
+      <div class="number price">15,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=eqSvHsXmhMc" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: It's All About You (Not About Me) (Album Version)<br>
+          A2: It's All About You (Not About Me) (Remix)<br>
+          A3: It's All About You (Not About Me) (Drum 'n' Bass Mix)<br>
+          B1: It's All About You (Not About Me) (Album Version - Instrumental)<br>
+          B2: It's All About You (Not About Me) (Album Version - Acappella)<br>
+          B3: It's On Tonight
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Various</div>
+      <div>Strictly Breaks Volume 10</div>
+      <div>Strictly Breaks Records</div>
+      <div class="number price">12,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=KU3uwUcypXE" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Detroit Emeralds – You're Getting A Little Too Smart<br>
+          A2: Michael Quatro – Stripper<br>
+          A3: Paul Butterfield – I Don't Wanna Go<br>
+          A4: Dorothy Ashby – Cause I Need It<br>
+          A5: Ripple – It Sure Is Funky<br>
+          A6: John Kasandra – Down Home Up's<br>
+          B1: Unknown Artist – Under The Cherry Moon<br>
+          B2: Bernard Wright – Hoboclabotribin<br>
+          B3: Donald Byrd – Dominoes<br>
+          B4: Dr. John – Right Place, Wrong Time<br>
+          B5: The Fatback Band – How To Dance<br>
+          B6: Idris Muhammad – Crab Apple
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="soul-funk">
+      <div>Windjammer</div>
+      <div>Tossing & Turning</div>
+      <div>MCA Records</div>
+      <div class="number price">18,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=3x7DlZyUQcQ" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Tossing And Turning<br>
+          A2: Dive Inside My Love
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         REGGAE LIST (A-Z)
+    =============================================== -->
+    <div class="list-row" data-genre="reggae">
+      <div>Third World</div>
+      <div>You’ve Got The Power</div>
+      <div>CBS/Sony</div>
+      <div class="number price">20,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=AJXrnV1vaT8" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Try Jah Love (Jah Jah Love)<br>
+          A2: Ride On<br>
+          A3: You're Playing Us Too Close<br>
+          A4: Before You Make Your Move (Melt With Everyone)<br>
+          B1: Jah Jah Children Moving Up<br>
+          B2: You've Got The Power (To Make A Change)<br>
+          B3: Inna Time Like This<br>
+          B4: I Wake Up Cryin'<br>
+          B5: Low Key-Jammin'
+        </div>
+      </div>
+    </div>
+
+    <!-- ==============================================
+         ELECTRONIC LIST (A-Z)
+    =============================================== -->
+    <div class="list-row" data-genre="electronic">
+      <div>Bassomatic</div>
+      <div>Ease On By (Remix)</div>
+      <div>Virgin</div>
+      <div class="number price">5,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=D5u7u6kE3-4" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Ease On By (Dub Throb Mix)<br>
+          A2: Rat Cut A Bottle (Electro Rat Mix)<br>
+          B1: Zombie Mantra<br>
+          B2: Soul Surrender
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="electronic">
+      <div>Innocence</div>
+      <div>Natural Thing</div>
+      <div>Cooltempo</div>
+      <div class="number price">5,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=AzuvRGrBgfw" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A: Natural Thing (Elevation)<br>
+          B: Natural Thing (Creation)
+        </div>
+      </div>
+    </div>
+
+    <div class="list-row" data-genre="electronic">
+      <div>Wreckage Inc.</div>
+      <div>Chase</div>
+      <div>Wall Of Sound</div>
+      <div class="number price">5,000</div> 
+      <div><a href="https://www.youtube.com/watch?v=YBI9Uh7L1mY" target="_blank" class="listen-link interactive">Listen Here!</a></div>
+      <div>
+        <span class="interactive track-toggle">[Track List]</span>
+        <div class="track-details">
+          A1: Chase (Original Mix)<br>
+          A2: Chase (Suga Bullit Mix)<br>
+          B1: Chase (Deadly Avenger Mix)<br>
+          B2: Chase (Strike Boys Mix)<br>
+          B3: Chase (Homage Mix)<br>
+          B4: Cutz
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const genreBtns = document.querySelectorAll('.genre-btn');
+    const archiveList = document.getElementById('archive-list');
+
+    function handleRoute() {
+      const currentHash = window.location.hash.replace(/^#$/, '').replace('#', ''); 
+
+      genreBtns.forEach(btn => btn.classList.remove('active-genre'));
+
+      if (currentHash && currentHash !== '') {
+        const activeBtn = document.querySelector(`.genre-btn[href="#${currentHash}"]`);
+        if (activeBtn) {
+          activeBtn.classList.add('active-genre'); 
+          archiveList.style.display = 'block';     
+
+          const rows = document.querySelectorAll('.list-row');
+          rows.forEach(row => {
+            if (row.getAttribute('data-genre') === currentHash) {
+              row.style.display = ''; 
+            } else {
+              row.style.display = 'none'; 
+            }
+          });
+        }
+      } else {
+        archiveList.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('hashchange', handleRoute);
+    handleRoute();
+
+    document.getElementById('home-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      history.pushState(null, null, ' '); 
+      handleRoute();
+    });
+
+    const toggles = document.querySelectorAll('.track-toggle');
+    toggles.forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        const details = this.nextElementSibling;
+        if (details) {
+            details.classList.toggle('active');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
