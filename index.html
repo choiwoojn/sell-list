@@ -45,16 +45,15 @@
     text-decoration-thickness: 1px;
   }
 
-  /* 장르 메뉴 영역 간격 조절 */
   .nav-genres {
     text-align: center;
-    margin-bottom: 45px; /* 글씨가 작아진 만큼 하단 여백도 살짝 줄임 */
+    margin-bottom: 45px; 
   }
 
   .nav-genres a {
     font-weight: 400; 
-    font-size: 1.1rem; /* 1.25rem에서 글씨 크기 축소 */
-    margin: 0 12px; /* 여백도 자연스럽게 살짝 줄임 */
+    font-size: 1.1rem; 
+    margin: 0 12px; 
     cursor: pointer;
     text-decoration: none;
     color: inherit;
@@ -82,7 +81,6 @@
     color: blue;
   }
 
-  /* a 태그뿐만 아니라 span 태그에도 밑줄이 적용되도록 변경 */
   .listen-link {
     text-decoration: underline;
     text-underline-offset: 6px;
@@ -111,10 +109,9 @@
     margin-bottom: 15px;
   }
 
-  /* 판매 완료 스타일 */
   .list-row.sold-out {
     opacity: 0.4;
-    pointer-events: none; /* 클릭 및 호버 방지 */
+    pointer-events: none; 
   }
 
   .list-row.sold-out::after {
@@ -144,7 +141,6 @@
     margin-top: 10px;
   }
 
-  /* 반응형 미디어 쿼리 */
   @media (max-width: 1400px) {
     body { padding: 30px 5vw; }
     .list-header, .list-row { column-gap: 50px; }
@@ -205,9 +201,6 @@
       <div></div>
     </div>
 
-    <!-- ==============================================
-         HIP HOP LIST (A-Z)
-    =============================================== -->
     <div class="list-row" data-genre="hiphop">
       <div>A+</div>
       <div>Enjoy Yourself</div>
@@ -459,9 +452,6 @@
       </div>
     </div>
 
-    <!-- ==============================================
-         SOUL / FUNK LIST (A-Z)
-    =============================================== -->
     <div class="list-row" data-genre="soul-funk">
       <div>Angela Bofill</div>
       <div>Tonight I Give In / Song For A Rainy Day (7inch)</div>
@@ -531,7 +521,6 @@
       </div>
     </div>
 
-    <!-- 텍스트를 남겨둔 Earth, Wind & Fire (판매 완료 처리) -->
     <div class="list-row sold-out" data-genre="soul-funk">
       <div>Earth, Wind & Fire</div>
       <div>Powerlight</div>
@@ -754,29 +743,13 @@
       </div>
     </div>
 
-    <div class="list-row" data-genre="soul-funk">
+    <div class="list-row sold-out" data-genre="soul-funk">
       <div>Various</div>
       <div>Strictly Breaks Volume 10</div>
       <div>Strictly Breaks Records</div>
       <div class="number price">12,000</div> 
-      <div><a href="https://www.youtube.com/watch?v=KU3uwUcypXE" target="_blank" class="listen-link interactive">Listen Here!</a></div>
-      <div>
-        <span class="interactive track-toggle">[Track List]</span>
-        <div class="track-details">
-          A1: Detroit Emeralds – You're Getting A Little Too Smart<br>
-          A2: Michael Quatro – Stripper<br>
-          A3: Paul Butterfield – I Don't Wanna Go<br>
-          A4: Dorothy Ashby – Cause I Need It<br>
-          A5: Ripple – It Sure Is Funky<br>
-          A6: John Kasandra – Down Home Up's<br>
-          B1: Unknown Artist – Under The Cherry Moon<br>
-          B2: Bernard Wright – Hoboclabotribin<br>
-          B3: Donald Byrd – Dominoes<br>
-          B4: Dr. John – Right Place, Wrong Time<br>
-          B5: The Fatback Band – How To Dance<br>
-          B6: Idris Muhammad – Crab Apple
-        </div>
-      </div>
+      <div><span class="listen-link">Listen Here!</span></div>
+      <div><span>[Track List]</span></div>
     </div>
 
     <div class="list-row" data-genre="soul-funk">
@@ -794,9 +767,6 @@
       </div>
     </div>
 
-    <!-- ==============================================
-         REGGAE LIST (A-Z)
-    =============================================== -->
     <div class="list-row" data-genre="reggae">
       <div>Third World</div>
       <div>You’ve Got The Power</div>
@@ -819,9 +789,6 @@
       </div>
     </div>
 
-    <!-- ==============================================
-         ELECTRONIC LIST (A-Z)
-    =============================================== -->
     <div class="list-row" data-genre="electronic">
       <div>Bassomatic</div>
       <div>Ease On By (Remix)</div>
@@ -904,14 +871,26 @@
       }
     }
 
+    // 기존 브라우저 뒤로가기/앞으로가기 이벤트
     window.addEventListener('hashchange', handleRoute);
-    handleRoute();
+
+    // ★ 장르 버튼을 눌렀을 때 브라우저 동작에 의존하지 않고 강제로 스크립트를 실행하도록 수정! ★
+    genreBtns.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault(); // 브라우저가 화면을 튕기며 강제로 이동하는 것을 방지
+        const targetHash = this.getAttribute('href'); 
+        history.pushState(null, null, targetHash); // 주소창만 슬쩍 바꿈
+        handleRoute(); // 필터링 즉시 실행
+      });
+    });
 
     document.getElementById('home-btn').addEventListener('click', function(e) {
       e.preventDefault();
-      history.pushState(null, null, ' '); 
+      history.pushState(null, null, window.location.pathname); 
       handleRoute();
     });
+
+    handleRoute(); // 최초 접속 시 한 번 실행
 
     const toggles = document.querySelectorAll('.track-toggle');
     toggles.forEach(toggle => {
