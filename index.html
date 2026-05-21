@@ -45,6 +45,7 @@
     text-decoration-thickness: 1px;
   }
 
+  /* 장르 메뉴 영역 간격 조절 */
   .nav-genres {
     text-align: center;
     margin-bottom: 45px; 
@@ -109,6 +110,7 @@
     margin-bottom: 15px;
   }
 
+  /* 판매 완료 스타일 */
   .list-row.sold-out {
     opacity: 0.4;
     pointer-events: none; 
@@ -141,6 +143,7 @@
     margin-top: 10px;
   }
 
+  /* 반응형 미디어 쿼리 */
   @media (max-width: 1400px) {
     body { padding: 30px 5vw; }
     .list-header, .list-row { column-gap: 50px; }
@@ -602,26 +605,13 @@
       </div>
     </div>
 
-    <div class="list-row" data-genre="soul-funk">
+    <div class="list-row sold-out" data-genre="soul-funk">
       <div>Ray, Goodman & Brown</div>
       <div>Open Up</div>
       <div>Polydor</div>
       <div class="number price">28,000</div> 
-      <div><a href="https://www.youtube.com/watch?v=h1zIEDSTtXM" target="_blank" class="listen-link interactive">Listen Here!</a></div>
-      <div>
-        <span class="interactive track-toggle">[Track List]</span>
-        <div class="track-details">
-          A1: If We Open Up<br>
-          A2: Love Minus One<br>
-          A3: Gambled On Your Love<br>
-          A4: Saying Goodbye Is Easy<br>
-          A5: It Was Always You<br>
-          B1: Taking Chances<br>
-          B2: After All<br>
-          B3: You Turned My World Around<br>
-          B4: Take Me To The Top Of Your Mountain
-        </div>
-      </div>
+      <div><span class="listen-link">Listen Here!</span></div>
+      <div><span>[Track List]</span></div>
     </div>
 
     <div class="list-row" data-genre="soul-funk">
@@ -874,13 +864,13 @@
     // 기존 브라우저 뒤로가기/앞으로가기 이벤트
     window.addEventListener('hashchange', handleRoute);
 
-    // ★ 장르 버튼을 눌렀을 때 브라우저 동작에 의존하지 않고 강제로 스크립트를 실행하도록 수정! ★
+    // 장르 버튼을 눌렀을 때 브라우저 동작에 의존하지 않고 강제로 스크립트를 실행
     genreBtns.forEach(btn => {
       btn.addEventListener('click', function(e) {
-        e.preventDefault(); // 브라우저가 화면을 튕기며 강제로 이동하는 것을 방지
+        e.preventDefault(); 
         const targetHash = this.getAttribute('href'); 
-        history.pushState(null, null, targetHash); // 주소창만 슬쩍 바꿈
-        handleRoute(); // 필터링 즉시 실행
+        history.pushState(null, null, targetHash); 
+        handleRoute(); 
       });
     });
 
@@ -890,7 +880,7 @@
       handleRoute();
     });
 
-    handleRoute(); // 최초 접속 시 한 번 실행
+    handleRoute(); 
 
     const toggles = document.querySelectorAll('.track-toggle');
     toggles.forEach(toggle => {
